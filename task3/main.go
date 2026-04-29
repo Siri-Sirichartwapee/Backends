@@ -2,42 +2,45 @@ package main
 
 import (
 	"fmt"
-	"sync"
 )
 
-type SafeCounter struct {
-	mu    sync.Mutex
-	count int
+// 1) สร้าง interface
+type Shape interface {
+	Area() float64
 }
 
-// Inc เพิ่มค่า count ทีละ 1
-func (c *SafeCounter) Inc() {
-	c.mu.Lock()
-	c.count++
-	c.mu.Unlock()
+// 2) สร้าง Rectangle
+type Rectangle struct {
+	Width  float64
+	Height float64
 }
 
-// Value คืนค่าปัจจุบัน
-func (c *SafeCounter) Value() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.count
+// implement Area ของ Rectangle
+func (r Rectangle) Area() float64 {
+	return r.Width * r.Height
+}
+
+// 3) สร้าง Circle
+type Circle struct {
+	Radius float64
+}
+
+// implement Area ของ Circle
+func (c Circle) Area() float64 {
+	return 3.14 * c.Radius * c.Radius
+}
+
+// 4) ฟังก์ชันรับ Shape อะไรก็ได้
+func PrintArea(s Shape) {
+	fmt.Println("Area =", s.Area())
 }
 
 func main() {
-	var counter SafeCounter
-	var wg sync.WaitGroup
+	// สร้าง object
+	rect := Rectangle{Width: 10, Height: 5}
+	circle := Circle{Radius: 3}
 
-	// จำลอง 1000 goroutines เรียก Inc พร้อมกัน
-	for i := 0; i < 1000; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			counter.Inc()
-		}()
-	}
-
-	wg.Wait()
-
-	fmt.Println("Final count =", counter.Value())
+	// เรียกใช้
+	PrintArea(rect)
+	PrintArea(circle)
 }
