@@ -10,14 +10,14 @@ type SafeCounter struct {
 	count int
 }
 
-// Inc เพิ่มค่า count ทีละ 1
+// เพิ่มค่า count ทีละ 1
 func (c *SafeCounter) Inc() {
-	c.mu.Lock()
+	c.mu.Lock()   // ล็อกก่อนแก้ค่า
 	c.count++
-	c.mu.Unlock()
+	c.mu.Unlock() // ปลดล็อก
 }
 
-// Value คืนค่าปัจจุบัน
+// คืนค่าปัจจุบัน
 func (c *SafeCounter) Value() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -28,9 +28,10 @@ func main() {
 	var counter SafeCounter
 	var wg sync.WaitGroup
 
-	// จำลอง 1000 goroutines เรียก Inc พร้อมกัน
+	// สร้าง 1000 goroutines
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
+
 		go func() {
 			defer wg.Done()
 			counter.Inc()
