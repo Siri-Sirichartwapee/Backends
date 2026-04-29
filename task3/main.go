@@ -2,45 +2,42 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"sync"
 )
 
-// Shape interface defines the Area method.
-type Shape interface {
-	Area() float64
+type SafeCounter struct {
+	mu    sync.Mutex
+	count int
 }
 
-// Rectangle struct
-type Rectangle struct {
-	Width  float64
-	Height float64
+// Inc เพิ่มค่า count ทีละ 1
+func (c *SafeCounter) Inc() {
+	c.mu.Lock()
+	c.count++
+	c.mu.Unlock()
 }
 
-func (r Rectangle) Area() float64 {
-	return r.Width * r.Height
-}
-
-// Circle struct
-type Circle struct {
-	Radius float64
-}
-
-func (c Circle) Area() float64 {
-	return math.Pi * c.Radius * c.Radius
-}
-
-// PrintArea prints the area of any Shape.
-func PrintArea(s Shape) {
-	fmt.Printf("Shape area: %.2f\n", s.Area())
+// Value คืนค่าปัจจุบัน
+func (c *SafeCounter) Value() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.count
 }
 
 func main() {
-	fmt.Println("--- Task 3: Interfaces ---")
-	rect := Rectangle{Width: 10, Height: 5}
-	circ := Circle{Radius: 7}
+	var counter SafeCounter
+	var wg sync.WaitGroup
 
-	fmt.Print("Rectangle: ")
-	PrintArea(rect)
-	fmt.Print("Circle: ")
-	PrintArea(circ)
+	// จำลอง 1000 goroutines เรียก Inc พร้อมกัน
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			counter.Inc()
+		}()
+	}
+
+	wg.Wait()
+
+	fmt.Println("Final count =", counter.Value())
 }

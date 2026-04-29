@@ -5,20 +5,19 @@ import (
 	"sync"
 )
 
-// SafeCounter is a thread-safe counter.
 type SafeCounter struct {
 	mu    sync.Mutex
 	count int
 }
 
-// Inc increments the counter by 1.
+// Inc เพิ่มค่า count ทีละ 1
 func (c *SafeCounter) Inc() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.count++
+	c.mu.Unlock()
 }
 
-// Value returns the current value of the counter.
+// Value คืนค่าปัจจุบัน
 func (c *SafeCounter) Value() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -26,12 +25,11 @@ func (c *SafeCounter) Value() int {
 }
 
 func main() {
-	fmt.Println("--- Task 2: Safe Counter ---")
-	counter := SafeCounter{}
+	var counter SafeCounter
 	var wg sync.WaitGroup
 
-	numRoutines := 1000
-	for i := 0; i < numRoutines; i++ {
+	// จำลอง 1000 goroutines เรียก Inc พร้อมกัน
+	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -40,5 +38,6 @@ func main() {
 	}
 
 	wg.Wait()
-	fmt.Printf("Final counter value: %d (Expected: %d)\n", counter.Value(), numRoutines)
+
+	fmt.Println("Final count =", counter.Value())
 }
